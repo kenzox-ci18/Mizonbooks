@@ -1,0 +1,259 @@
+ 
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="description" content="MizonBooks shaxsiy kabinetingiz. Profilingiz va promo-aksiyadagi natijalaringizni kuzating.">
+
+    <title>Mening profilim — MizonBooks</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/profile.css">
+</head>
+
+<body>
+
+    <header class="profile-header">
+        <a href="profile.html" class="profile-logo">MizonBooks</a>
+
+        <nav aria-label="Asosiy navigatsiya">
+            <a href="books.html">Kitoblar</a>
+            <a href="#promo">Promo-kod</a>
+            <a href="admin.html" id="adminLink" hidden>Admin panel</a>
+            <button type="button" id="logoutBtn">Chiqish ↗</button>
+        </nav>
+    </header>
+
+    <main class="profile-main">
+
+        <section class="profile-heading">
+            <div>
+                <span class="eyebrow">SHAXSIY KABINET</span>
+                <h1>Mening profilim</h1>
+                <p>Mutolaa sayohatingiz shu yerdan davom etadi.</p>
+            </div>
+
+            <span class="member-label">MIZON A'ZOSI</span>
+        </section>
+
+        <section class="profile-grid">
+
+            <!-- Foydalanuvchi ma'lumotlari -->
+
+            <article class="profile-card user-card">
+
+                <div
+                    class="avatar"
+                    id="avatar"
+                    aria-label="Profil rasmi"
+                >M</div>
+
+                <h2 id="userName">Foydalanuvchi</h2>
+
+                <p id="userHandle">@username</p>
+
+                <div class="user-divider"></div>
+
+                <div class="user-detail">
+                    <span>Telefon raqam</span>
+                    <strong id="userPhone">+998 -- --- -- --</strong>
+                </div>
+
+                <button
+                    type="button"
+                    class="edit-profile-btn"
+                    id="editProfileBtn"
+                >
+                    Profilni tahrirlash ↗
+                </button>
+
+            </article>
+
+            <!-- Promo bo'laklari -->
+
+            <article class="profile-card collection-card" id="promo">
+
+                <div class="collection-top">
+                    <div>
+                        <span class="eyebrow">MAXSUS AKSIYA</span>
+                        <h2>Yutuq sari 4 qadam</h2>
+                    </div>
+
+                    <span class="collection-count" id="pieceCount">
+                        0 / 4
+                    </span>
+                </div>
+
+                <p class="collection-description">
+                    Har bir kod xatcho‘pning bitta bo‘lagini ochadi. 4 ta bo‘lakni ham oching va kitob yutib oling!
+                </p>
+
+                <div class="bookmark-stage">
+                    <div class="bookmark" id="bookmark" aria-label="Xatcho‘p puzzle">
+                        <div class="bookmark-seg" data-piece="1"><b>?</b></div>
+                        <div class="bookmark-seg" data-piece="2"><b>?</b></div>
+                        <div class="bookmark-seg" data-piece="3"><b>?</b></div>
+                        <div class="bookmark-seg" data-piece="4"><b>?</b></div>
+                    </div>
+                </div>
+
+                <div class="puzzle-grid">
+
+                    <div class="puzzle-piece" id="pieceCard1">
+                        <span>01</span>
+                        <strong>1-bo‘lak</strong>
+                        <small id="piece1">Hali olinmagan</small>
+                    </div>
+
+                    <div class="puzzle-piece" id="pieceCard2">
+                        <span>02</span>
+                        <strong>2-bo‘lak</strong>
+                        <small id="piece2">Hali olinmagan</small>
+                    </div>
+
+                    <div class="puzzle-piece" id="pieceCard3">
+                        <span>03</span>
+                        <strong>3-bo‘lak</strong>
+                        <small id="piece3">Hali olinmagan</small>
+                    </div>
+
+                    <div class="puzzle-piece" id="pieceCard4">
+                        <span>04</span>
+                        <strong>4-bo‘lak</strong>
+                        <small id="piece4">Hali olinmagan</small>
+                    </div>
+
+                </div>
+
+                <div class="progress-area">
+
+                    <div class="progress-label">
+                        <span>Yig‘ish jarayoni</span>
+                        <strong id="progressPercent">0%</strong>
+                    </div>
+
+                    <div
+                        class="progress-track"
+                        role="progressbar"
+                        aria-label="Promo bo‘laklarini yig‘ish jarayoni"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        aria-valuenow="0"
+                    >
+                        <div
+                            class="progress-fill"
+                            id="progressFill"
+                        ></div>
+                    </div>
+
+                </div>
+
+            </article>
+
+        </section>
+
+        <!-- Promo kod kiritish -->
+
+        <section class="profile-card promo-entry">
+
+            <div class="promo-info">
+                <span class="eyebrow">SIZNING IMKONIYATINGIZ</span>
+
+                <h2>Promo-kodni kiriting</h2>
+
+                <p>
+                    Kitob bilan birga olgan maxsus xatcho‘pingizning orqasidagi
+                    6 ta belgili kodni shu yerga yozing.
+                </p>
+            </div>
+
+            <form id="promoForm">
+
+                <label for="promoCode">Maxsus promo-kod</label>
+
+                <input
+                    type="text"
+                    id="promoCode"
+                    name="promoCode"
+                    placeholder="Masalan: 2N3B3B"
+                    maxlength="8"
+                    autocomplete="off"
+                    required
+                >
+
+                <button type="submit">
+                    Kodni tekshirish <span>→</span>
+                </button>
+
+            </form>
+
+            <p
+                id="promoMessage"
+                class="promo-message"
+                role="status"
+                aria-live="polite"
+            ></p>
+
+        </section>
+
+        <!-- G'oliblik xabari -->
+
+        <section
+            class="winner-banner"
+            id="winnerBanner"
+            aria-live="polite"
+            hidden
+        >
+
+            <span>✦ TABRIKLAYMIZ ✦</span>
+
+            <h2>Siz 1 ta kitob yutib oldingiz!</h2>
+
+            <p>
+                Administrator ro‘yxatdan o‘tishda kiritgan telefon raqamingiz
+                orqali siz bilan bog‘lanib, sovg‘angizni topshiradi.
+            </p>
+
+        </section>
+
+    </main>
+
+    <div class="edit-overlay" id="editModal" hidden>
+        <form class="edit-modal" id="editForm">
+            <h2>Profilni tahrirlash</h2>
+
+            <label for="editName">Ism-familiya</label>
+            <input type="text" id="editName" maxlength="150" required>
+
+            <label for="editPhone">Telefon raqam</label>
+            <input type="tel" id="editPhone" maxlength="30" required>
+
+            <label for="editAvatar">Profil rasmi (havola, ixtiyoriy)</label>
+            <input type="url" id="editAvatar" maxlength="1000" placeholder="https://...">
+
+            <p id="editMessage" class="promo-message" role="status"></p>
+
+            <div class="edit-actions">
+                <button type="button" id="editCancel" class="edit-cancel">Bekor qilish</button>
+                <button type="submit" id="editSave" class="edit-save">Saqlash</button>
+            </div>
+        </form>
+    </div>
+
+    <footer class="profile-footer">
+        <span>© 2026 MizonBooks</span>
+        <span>Har bir kitob — yangi bir olam.</span>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/profile.js"></script>
+
+</body>
+</html>

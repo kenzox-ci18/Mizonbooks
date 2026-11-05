@@ -1,0 +1,173 @@
+ 
+<!doctype html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta
+      name="description"
+      content="MizonBooks — sevimli kitoblaringizni kashf eting va mutolaa zavqini his qiling."
+    />
+
+    <title>MizonBooks — Kitoblar olami</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <main class="auth-wrapper">
+
+      <section class="brand-side">
+        <div class="brand-content">
+
+          <div class="logo-placeholder">MizonBooks</div>
+
+          <span class="eyebrow">KITOB SEVUVCHILAR UCHUN</span>
+
+          <h1>
+            Har bir kitob —
+            <br />
+            <span>yangi bir olam.</span>
+          </h1>
+
+          <p>
+            Sevimli kitoblaringizni kashf eting, yangi hikoyalar bilan tanishing
+            va mutolaa zavqini his qiling.
+          </p>
+
+          <div class="brand-bottom">
+            <span>Kitob — qalb uchun sayohat.</span>
+            <span>01 / 2026</span>
+          </div>
+
+        </div>
+      </section>
+
+      <section class="form-side">
+        <div class="form-container">
+
+          <div class="mobile-logo">MizonBooks</div>
+
+          <div class="welcome-text">
+            <span class="eyebrow">XUSH KELIBSIZ</span>
+
+            <h2 id="welcomeTitle">Hisobingizga kiring</h2>
+
+            <p id="welcomeDescription">
+              Kitoblar olamiga qaytganingizdan xursandmiz.
+            </p>
+          </div>
+
+          <div class="auth-tabs">
+            <button
+              type="button"
+              id="loginTab"
+              class="active"
+            >
+              Kirish
+            </button>
+
+            <button
+              type="button"
+              id="registerTab"
+            >
+              Hisob yaratish
+            </button>
+          </div>
+
+          <form id="authForm">
+
+            <div id="fullNameField" hidden>
+              <label for="fullName">Ism va familiya</label>
+
+              <input
+                type="text"
+                id="fullName"
+                name="fullName"
+                placeholder="Ismingizni kiriting"
+                maxlength="100"
+                autocomplete="name"
+              />
+            </div>
+
+            <div id="phoneField" hidden>
+              <label for="phone">Telefon raqam</label>
+
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                placeholder="+998 90 123 45 67"
+                autocomplete="tel"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="username">Foydalanuvchi nomi</label>
+
+              <input
+                type="text"
+                id="username"
+                name="username"
+                placeholder="username"
+                autocomplete="username"
+                minlength="3"
+                maxlength="24"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="password">Parol</label>
+
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Parolingiz"
+                autocomplete="current-password"
+                minlength="8"
+                required
+              />
+            </div>
+
+            <p
+              id="message"
+              class="message"
+              role="status"
+              aria-live="polite"
+            ></p>
+
+            <button
+              type="submit"
+              class="submit-btn"
+            >
+              <span id="submitText">Tizimga kirish</span>
+              <span aria-hidden="true">→</span>
+            </button>
+
+          </form>
+
+          <div class="form-footer">
+            <span>© 2026 MizonBooks</span>
+            <span>Kitob bilan hayot go‘zal.</span>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+  </body>
+</html>

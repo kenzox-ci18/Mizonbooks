@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#211812" />
+
+    <title>MizonBooks — Admin Panel</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="css/admin.css" />
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="js/config.js" defer></script>
+    <script src="js/admin.js" defer></script>
+  </head>
+
+  <body>
+    <div class="admin-layout">
+      <!-- SIDEBAR -->
+
+      <aside class="sidebar" id="sidebar">
+        <a href="books.html" class="brand"> Mizon<span>Books</span> </a>
+
+        <p class="sidebar-label">BOSHQARUV</p>
+
+        <nav class="side-nav">
+          <button
+            class="nav-item active"
+            data-section="dashboard"
+            type="button"
+          >
+            <i data-lucide="layout-dashboard"></i>
+            <span>Dashboard</span>
+          </button>
+
+          <button class="nav-item" data-section="books" type="button">
+            <i data-lucide="book-open"></i>
+            <span>Kitoblar</span>
+          </button>
+
+          <button class="nav-item" data-section="orders" type="button">
+            <i data-lucide="shopping-bag"></i>
+            <span>Buyurtmalar</span>
+          </button>
+
+          <button class="nav-item" data-section="promos" type="button">
+            <i data-lucide="ticket"></i>
+            <span>Promo-kodlar</span>
+          </button>
+
+          <button class="nav-item" data-section="users" type="button">
+            <i data-lucide="users"></i>
+            <span>Foydalanuvchilar</span>
+          </button>
+
+          <button class="nav-item" data-section="winners" type="button">
+            <i data-lucide="trophy"></i>
+            <span>G‘oliblar</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-bottom">
+          <a href="books.html">
+            <i data-lucide="arrow-left"></i>
+            <span>Saytga qaytish</span>
+          </a>
+
+          <button id="logoutBtn" type="button">
+            <i data-lucide="log-out"></i>
+            <span>Chiqish</span>
+          </button>
+        </div>
+      </aside>
+      <div class="sidebar-overlay" id="sidebarOverlay"></div>
+      <!-- MAIN CONTENT -->
+
+      <main class="admin-main">
+        <header class="admin-header">
+          <button
+            class="mobile-menu"
+            id="mobileMenu"
+            type="button"
+            aria-label="Menyuni ochish"
+          >
+            <i data-lucide="menu"></i>
+          </button>
+
+          <div>
+            <p class="header-caption">MIZONBOOKS BOSHQARUVI</p>
+            <h1 id="pageTitle">Dashboard</h1>
+          </div>
+
+          <div class="admin-profile">
+            <div class="admin-avatar">A</div>
+
+            <div>
+              <strong>Administrator</strong>
+              <span>Admin panel</span>
+            </div>
+          </div>
+        </header>
+
+        <div class="admin-content">
+          <section class="admin-section active" id="dashboardSection">
+            <div class="welcome-block">
+              <div>
+                <span class="eyebrow">BOSHQARUV MARKAZI</span>
+                <h2>Xush kelibsiz!</h2>
+                <p>MizonBooks do‘koningizni shu yerdan boshqaring.</p>
+              </div>
+            </div>
+
+            <div class="stats-grid">
+              <article class="stat-card">
+                <span>Jami kitoblar</span>
+                <strong id="statBooks">0</strong>
+                <small>Katalogdagi kitoblar</small>
+              </article>
+
+              <article class="stat-card">
+                <span>Buyurtmalar</span>
+                <strong id="statOrders">0</strong>
+                <small>Jami buyurtmalar</small>
+              </article>
+
+              <article class="stat-card">
+                <span>Kutilayotgan</span>
+                <strong id="statPending">0</strong>
+                <small>Ko‘rib chiqilishi kerak</small>
+              </article>
+
+              <article class="stat-card">
+                <span>Foydalanuvchilar</span>
+                <strong id="statUsers">0</strong>
+                <small>Ro‘yxatdan o‘tganlar</small>
+              </article>
+            </div>
+
+            <div class="panel-card">
+              <div class="panel-heading">
+                <div>
+                  <h3>So‘nggi buyurtmalar</h3>
+                  <p>Yangi buyurtmalar ro‘yxati</p>
+                </div>
+              </div>
+
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Mijoz</th>
+                      <th>Kitob</th>
+                      <th>Sana</th>
+                      <th>Holat</th>
+                    </tr>
+                  </thead>
+
+                  <tbody id="recentOrders">
+                    <tr>
+                      <td colspan="4" class="table-empty">
+                        Hozircha buyurtmalar yo‘q.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- BOOKS -->
+
+          <section class="admin-section" id="booksSection">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">KATALOG BOSHQARUVI</span>
+                <h2>Kitoblar</h2>
+                <p>Kitoblarni qo‘shing, tahrirlang va katalogni boshqaring.</p>
+              </div>
+
+              <button class="primary-btn" id="addBookBtn" type="button">
+                <i data-lucide="plus"></i>
+                Yangi kitob
+              </button>
+            </div>
+
+            <div class="books-toolbar">
+              <input
+                type="search"
+                id="adminBookSearch"
+                placeholder="Kitob nomini qidirish..."
+              />
+
+              <select id="adminBookCategory">
+                <option value="all">Barcha kategoriyalar</option>
+                <option value="badiiy">Badiiy</option>
+                <option value="biznes">Biznes</option>
+                <option value="psixologiya">Psixologiya</option>
+                <option value="tarix">Tarix</option>
+                <option value="bolalar">Bolalar</option>
+              </select>
+            </div>
+
+            <div class="books-summary">
+              <span>Jami: <strong id="booksTotal">0</strong> ta kitob</span>
+              <span>Faol: <strong id="activeBooksTotal">0</strong></span>
+              <span>Yashirilgan: <strong id="hiddenBooksTotal">0</strong></span>
+            </div>
+
+            <div class="panel-card">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Kitob</th>
+                      <th>Kategoriya</th>
+                      <th>Narx</th>
+                      <th>Soni</th>
+                      <th>Holat</th>
+                      <th>Amallar</th>
+                    </tr>
+                  </thead>
+
+                  <tbody id="booksTable">
+                    <tr>
+                      <td colspan="6" class="table-empty">
+                        Kitoblar yuklanmoqda...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- ORDERS -->
+
+          <section class="admin-section" id="ordersSection">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">SAVDO BOSHQARUVI</span>
+                <h2>Buyurtmalar</h2>
+                <p>Mijozlardan kelgan buyurtmalar.</p>
+              </div>
+
+              <button class="secondary-btn" id="refreshOrders" type="button">
+                <i data-lucide="refresh-cw"></i>
+                Yangilash
+              </button>
+            </div>
+
+            <div class="panel-card">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Mijoz</th>
+                      <th>Telefon</th>
+                      <th>Kitob</th>
+                      <th>Sana</th>
+                      <th>Holat</th>
+                      <th>Amallar</th>
+                    </tr>
+                  </thead>
+
+                  <tbody id="ordersTable">
+                    <tr>
+                      <td colspan="6" class="table-empty">
+                        Buyurtmalar hozircha mavjud emas.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- PROMOS -->
+
+          <section class="admin-section" id="promosSection">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">AKSIYA BOSHQARUVI</span>
+                <h2>Promo-kodlar</h2>
+                <p>Kitoblar ichidagi maxsus kodlarni boshqaring.</p>
+              </div>
+
+              <div style="display: flex; gap: 10px; flex-wrap: wrap">
+                <button class="secondary-btn" id="exportPromoBtn" type="button">
+                  <i data-lucide="download"></i>
+                  Ishlatilmaganlarni yuklab olish
+                </button>
+
+                <button class="primary-btn" id="createPromoBtn" type="button">
+                  <i data-lucide="plus"></i>
+                  Promo-kod yaratish
+                </button>
+              </div>
+            </div>
+
+            <div class="books-summary">
+              <span>Jami: <strong id="promoTotal">0</strong></span>
+              <span>Ishlatilgan: <strong id="promoUsed">0</strong></span>
+              <span>Qolgan: <strong id="promoUnused">0</strong></span>
+            </div>
+
+            <div class="panel-card bookmark-admin">
+              <div class="panel-heading">
+                <div>
+                  <h3>Xatcho‘p rasmi</h3>
+                  <p>
+                    Mijozning profilida shu rasm 4 bo‘lakka bo‘linadi (yuqoridan
+                    pastga: 1, 2, 3, 4). Har bir to‘g‘ri kod o‘z bo‘lagini ochadi.
+                    Rasm xatcho‘p shakliga (tik, 130×340) avtomatik moslanadi.
+                  </p>
+                </div>
+              </div>
+
+              <div class="bookmark-admin-body">
+                <div class="bookmark-preview" id="bookmarkPreview">
+                  <span id="bookmarkPlaceholder">Rasm yuklanmagan</span>
+                  <img id="bookmarkPreviewImg" alt="Xatcho‘p" hidden />
+                  <div class="bookmark-preview-grid" id="bookmarkPreviewGrid" hidden>
+                    <i></i><i></i><i></i><i></i>
+                  </div>
+                </div>
+
+                <div class="bookmark-admin-actions">
+                  <input
+                    type="file"
+                    id="bookmarkFile"
+                    accept="image/png,image/jpeg,image/webp"
+                    hidden
+                  />
+
+                  <button class="primary-btn" id="uploadBookmarkBtn" type="button">
+                    <i data-lucide="upload"></i>
+                    Rasm yuklash
+                  </button>
+
+                  <button class="secondary-btn" id="removeBookmarkBtn" type="button">
+                    <i data-lucide="trash-2"></i>
+                    Rasmni o‘chirish
+                  </button>
+
+                  <p id="bookmarkMessage" class="form-message" aria-live="polite"></p>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel-card">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Promo-kod</th>
+                      <th>Bo‘lak</th>
+                      <th>Holat</th>
+                      <th>Foydalanuvchi</th>
+                      <th>Sana</th>
+                    </tr>
+                  </thead>
+
+                  <tbody id="promosTable">
+                    <tr>
+                      <td colspan="5" class="table-empty">
+                        Promo-kodlar mavjud emas.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- USERS -->
+
+          <section class="admin-section" id="usersSection">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">MIJOZLAR</span>
+                <h2>Foydalanuvchilar</h2>
+                <p>Ro‘yxatdan o‘tgan mijozlar.</p>
+              </div>
+            </div>
+
+            <div class="panel-card">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Ism</th>
+                      <th>Username</th>
+                      <th>Telefon</th>
+                      <th>Ro‘yxatdan o‘tgan</th>
+                      <th>Bo‘laklar</th>
+                    </tr>
+                  </thead>
+
+                  <tbody id="usersTable">
+                    <tr>
+                      <td colspan="5" class="table-empty">
+                        Foydalanuvchilar mavjud emas.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- WINNERS -->
+
+          <section class="admin-section" id="winnersSection">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">MAXSUS NATIJALAR</span>
+                <h2>G‘oliblar</h2>
+                <p>Promo-aksiyada g‘olib bo‘lgan mijozlar.</p>
+              </div>
+            </div>
+
+            <div class="panel-card">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Ism</th>
+                      <th>Username</th>
+                      <th>Telefon</th>
+                      <th>Yutgan sana</th>
+                      <th>Mukofot holati</th>
+                    </tr>
+                  </thead>
+
+                  <tbody id="winnersTable">
+                    <tr>
+                      <td colspan="5" class="table-empty">
+                        Hozircha g‘oliblar yo‘q.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- BOOK MODAL -->
+
+    <div class="admin-modal" id="bookModal" hidden>
+      <div class="admin-modal-overlay" data-close-book-modal></div>
+
+      <div class="admin-modal-content">
+        <button
+          class="modal-close"
+          type="button"
+          data-close-book-modal
+          aria-label="Yopish"
+        >
+          <i data-lucide="x"></i>
+        </button>
+
+        <span class="eyebrow">KATALOG BOSHQARUVI</span>
+        <h2 id="bookModalTitle">Yangi kitob qo‘shish</h2>
+        <p>Kitob haqidagi ma’lumotlarni kiriting.</p>
+
+        <form id="bookForm">
+          <input type="hidden" id="bookId" />
+
+          <div class="form-group">
+            <label for="bookName">Kitob nomi *</label>
+            <input
+              id="bookName"
+              type="text"
+              maxlength="150"
+              required
+              placeholder="Kitob nomini kiriting"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="bookAuthor">Muallif *</label>
+            <input
+              id="bookAuthor"
+              type="text"
+              maxlength="120"
+              required
+              placeholder="Muallif ismi"
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="bookPrice">Narxi (so‘m) *</label>
+              <input
+                id="bookPrice"
+                type="number"
+                min="1"
+                step="1"
+                required
+                placeholder="85000"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="bookStock">Soni</label>
+              <input id="bookStock" type="number" min="0" step="1" value="1" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="bookCategory">Kategoriya *</label>
+            <select id="bookCategory" required>
+              <option value="">Kategoriyani tanlang</option>
+              <option value="badiiy">Badiiy</option>
+              <option value="biznes">Biznes</option>
+              <option value="psixologiya">Psixologiya</option>
+              <option value="tarix">Tarix</option>
+              <option value="bolalar">Bolalar</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="bookImageFile">Kitob muqovasi</label>
+            <input
+              id="bookImageFile"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+            />
+            <img
+              id="bookImagePreview"
+              class="book-image-preview"
+              alt="Muqova"
+              hidden
+            />
+            <small>Kompyuterdan rasm tanlang yoki quyida rasm manzilini kiriting.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="bookImage">Yoki rasm URL manzili</label>
+            <input
+              id="bookImage"
+              type="text"
+              placeholder="https://example.com/book.jpg"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="bookDescription">Kitob tavsifi</label>
+            <textarea
+              id="bookDescription"
+              rows="4"
+              maxlength="2000"
+              placeholder="Kitob haqida qisqacha..."
+            ></textarea>
+          </div>
+
+          <p id="bookFormMessage" class="form-message" aria-live="polite"></p>
+
+          <div class="modal-actions">
+            <button type="button" class="secondary-btn" data-close-book-modal>
+              Bekor qilish
+            </button>
+
+            <button type="submit" class="primary-btn" id="saveBookBtn">
+              Kitobni saqlash
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- PROMO GENERATE MODAL -->
+
+    <div class="admin-modal" id="promoModal" hidden>
+      <div class="admin-modal-overlay" data-close-promo-modal></div>
+
+      <div class="admin-modal-content">
+        <button
+          class="modal-close"
+          type="button"
+          data-close-promo-modal
+          aria-label="Yopish"
+        >
+          <i data-lucide="x"></i>
+        </button>
+
+        <span class="eyebrow">AKSIYA BOSHQARUVI</span>
+        <h2>Promo-kodlar yaratish</h2>
+        <p>
+          Har bir kod 6 ta belgidan iborat bo‘lib, bir marta ishlatiladi va
+          xatcho‘pning tanlangan bo‘lagini ochadi. Foydalanuvchi 4 ta bo‘lakni
+          ham (1, 2, 3, 4) yig‘sa, kitob yutadi. Yaratilgan kodlar CSV fayl
+          bo‘lib yuklab olinadi.
+        </p>
+
+        <form id="promoGenerateForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="promoCount">Nechta kod? *</label>
+              <input
+                id="promoCount"
+                type="number"
+                min="1"
+                max="5000"
+                step="1"
+                value="100"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="promoBatch">Partiya nomi</label>
+              <input
+                id="promoBatch"
+                type="text"
+                maxlength="50"
+                placeholder="Masalan: 1-partiya"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="promoPiece">Qaysi bo‘lak uchun? *</label>
+              <select id="promoPiece" required>
+                <option value="1">1-bo‘lak</option>
+                <option value="2">2-bo‘lak</option>
+                <option value="3">3-bo‘lak</option>
+                <option value="4">4-bo‘lak</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="promoCustom">O‘zim yozaman (ixtiyoriy)</label>
+              <textarea
+                id="promoCustom"
+                rows="3"
+                placeholder="2N3B3B, K7P9QX&#10;A1B2C3"
+                autocomplete="off"
+              ></textarea>
+              <small>
+                Har bir kod 6 ta harf yoki raqam. Bir nechtasini vergul yoki
+                yangi qator bilan ajrating. To‘ldirilsa, “Nechta kod” hisobga
+                olinmaydi.
+              </small>
+            </div>
+          </div>
+
+          <p id="promoFormMessage" class="form-message" aria-live="polite"></p>
+
+          <div class="modal-actions">
+            <button type="button" class="secondary-btn" data-close-promo-modal>
+              Bekor qilish
+            </button>
+
+            <button type="submit" class="primary-btn" id="generatePromoBtn">
+              Yaratish
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- DELETE CONFIRMATION -->
+
+    <div class="confirm-modal" id="deleteConfirmModal" hidden>
+      <div class="confirm-content">
+        <h3>Kitobni o‘chirmoqchimisiz?</h3>
+
+        <p>Bu amalni tasdiqlashdan oldin kitob ma’lumotlarini tekshiring.</p>
+
+        <div class="modal-actions">
+          <button type="button" class="secondary-btn" id="cancelDeleteBtn">
+            Bekor qilish
+          </button>
+
+          <button type="button" class="danger-btn" id="confirmDeleteBtn">
+            O‘chirish
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+    </script>
+  </body>
+</html>

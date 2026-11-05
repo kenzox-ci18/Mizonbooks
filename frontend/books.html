@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#352219">
+    <title>Kitoblar — MizonBooks</title>
+
+    <link rel="stylesheet" href="css/books.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header class="shop-header">
+        <a href="index.html" class="shop-logo">MizonBooks</a>
+
+        <nav class="shop-nav">
+            <a href="books.html" class="nav-active">Kitoblar</a>
+            <a href="profile.html">Profilim</a>
+        </nav>
+
+        <a href="profile.html" class="account-link">Shaxsiy kabinet</a>
+    </header>
+
+    <main>
+        <section class="shop-hero">
+            <div class="hero-content">
+                <span class="eyebrow">MIZONBOOKS KITOB DO‘KONI</span>
+
+                <h1>
+                    Har bir kitob —<br>
+                    yangi <span>dunyo.</span>
+                </h1>
+
+                <p>
+                    Siz izlagan bilim, ilhom va yangi taassurotlar<br>
+                    bir sahifadan boshlanadi.
+                </p>
+
+                <a href="#catalog" class="hero-button">
+                    Kitoblarni ko‘rish <span>→</span>
+                </a>
+            </div>
+
+            <div class="hero-decoration" aria-hidden="true">
+                <div class="hero-book hero-book-one"></div>
+                <div class="hero-book hero-book-two"></div>
+                <div class="hero-book hero-book-three"></div>
+                <span class="decoration-text">A WORLD BETWEEN PAGES</span>
+            </div>
+        </section>
+
+        <section class="catalog-section" id="catalog">
+            <div class="catalog-heading">
+                <div>
+                    <span class="eyebrow">BIZNING TO‘PLAM</span>
+                    <h2>Kitoblar katalogi</h2>
+                    <p>O‘zingiz uchun eng yaxshi kitobni tanlang.</p>
+                </div>
+
+                <div class="book-total">
+                    <span id="bookCount">0</span> ta kitob
+                </div>
+            </div>
+
+            <div class="catalog-tools">
+                <label class="search-box">
+                    <span aria-hidden="true">⌕</span>
+                    <input
+                        type="search"
+                        id="searchInput"
+                        placeholder="Kitob yoki muallifni qidiring..."
+                        autocomplete="off"
+                    >
+                </label>
+
+                <select id="sortSelect" aria-label="Kitoblarni saralash">
+                    <option value="default">Saralash</option>
+                    <option value="price-asc">Narx: arzonidan</option>
+                    <option value="price-desc">Narx: qimmatidan</option>
+                    <option value="name">Nomi bo‘yicha</option>
+                </select>
+            </div>
+
+            <div class="category-list">
+                <button class="category-btn active" type="button" data-category="all">Barchasi</button>
+                <button class="category-btn" type="button" data-category="badiiy">Badiiy</button>
+                <button class="category-btn" type="button" data-category="biznes">Biznes</button>
+                <button class="category-btn" type="button" data-category="psixologiya">Psixologiya</button>
+                <button class="category-btn" type="button" data-category="tarix">Tarix</button>
+                <button class="category-btn" type="button" data-category="bolalar">Bolalar</button>
+            </div>
+
+            <div class="books-grid" id="booksGrid"></div>
+
+            <div class="empty-state" id="emptyState">
+                <span>⌕</span>
+                <h3>Kitob topilmadi</h3>
+                <p>Boshqa nom yoki kategoriya bo‘yicha qidirib ko‘ring.</p>
+            </div>
+        </section>
+
+        <section class="shop-note">
+            <span class="eyebrow">MIZONBOOKS MUHITI</span>
+            <h2>Yaxshi kitob —<br><span>yaxshi hamroh.</span></h2>
+            <p>
+                Har bir kitob yangi fikrlar, yangi bilimlar va yangi imkoniyatlar
+                eshigini ochadi. O‘zingizga mos kitobni tanlang.
+            </p>
+        </section>
+    </main>
+
+    <footer class="shop-footer">
+        <a href="index.html" class="shop-logo">MizonBooks</a>
+        <span>© 2026 MizonBooks. Barcha huquqlar himoyalangan.</span>
+        <a href="profile.html">Shaxsiy kabinet</a>
+    </footer>
+
+    <div class="modal-overlay" id="orderModal" role="dialog" aria-modal="true" aria-labelledby="orderTitle">
+        <div class="order-modal">
+            <button class="modal-close" type="button" data-close-modal aria-label="Yopish">×</button>
+
+            <span class="eyebrow">BUYURTMA BERISH</span>
+            <h2 id="orderTitle">Kitobni buyurtma qilish</h2>
+
+            <p class="modal-description">
+                Ma’lumotlaringizni kiriting. Buyurtmangizni qabul qilish uchun siz bilan bog‘lanamiz.
+            </p>
+
+            <div class="selected-book" id="selectedBook"></div>
+
+            <form id="orderForm">
+                <input type="hidden" id="selectedBookId" name="bookId">
+
+                <label for="customerName">Ismingiz</label>
+                <input
+                    id="customerName"
+                    name="name"
+                    type="text"
+                    placeholder="Ismingizni kiriting"
+                    maxlength="100"
+                    autocomplete="name"
+                    required
+                >
+
+                <label for="customerPhone">Telefon raqamingiz</label>
+                <input
+                    id="customerPhone"
+                    name="phone"
+                    type="tel"
+                    placeholder="+998 90 123 45 67"
+                    autocomplete="tel"
+                    required
+                >
+
+                <label for="orderNote">Qo‘shimcha izoh</label>
+                <textarea
+                    id="orderNote"
+                    name="note"
+                    placeholder="Ixtiyoriy..."
+                    rows="3"
+                    maxlength="500"
+                ></textarea>
+
+                <button type="submit" class="order-submit">Buyurtma berish</button>
+
+                <p id="orderMessage" class="order-message" aria-live="polite"></p>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/books.js"></script>
+</body>
+</html>

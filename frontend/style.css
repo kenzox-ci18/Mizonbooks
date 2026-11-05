@@ -1,0 +1,333 @@
+:root {
+  --brown-dark: #352219;
+  --brown: #62432f;
+  --brown-light: #927052;
+  --cream: #f8f3eb;
+  --white: #fffdf9;
+  --text: #35291f;
+  --muted: #968778;
+  --border: #e9dfd2;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--cream);
+  color: var(--text);
+  font-family: "DM Sans", sans-serif;
+}
+
+.auth-wrapper {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 22px;
+  gap: 22px;
+}
+
+.brand-side {
+  min-height: calc(100vh - 44px);
+  background:
+    linear-gradient(135deg, rgba(35, 22, 15, 0.92), rgba(77, 49, 32, 0.82)),
+    url("https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=85&w=1400");
+  background-size: cover;
+  background-position: center;
+  border-radius: 18px;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  padding: 9%;
+}
+
+.brand-content {
+  max-width: 510px;
+  width: 100%;
+  min-height: 78vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-placeholder,
+.mobile-logo {
+  font-family: "Playfair Display", serif;
+  font-size: 23px;
+  letter-spacing: 2px;
+  font-weight: 700;
+}
+
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #bda486;
+  font-weight: 700;
+}
+
+.brand-content .eyebrow {
+  margin-top: auto;
+  margin-bottom: 24px;
+}
+
+.brand-content h1 {
+  font-family: "Playfair Display", serif;
+  font-size: clamp(38px, 5vw, 67px);
+  line-height: 1.15;
+  font-weight: 500;
+}
+
+.brand-content h1 span {
+  color: #c9a982;
+  font-style: italic;
+}
+
+.brand-content > p {
+  color: #d7c9b9;
+  line-height: 1.9;
+  font-size: 14px;
+  max-width: 390px;
+  margin-top: 25px;
+}
+
+.brand-bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: auto;
+  padding-top: 30px;
+  color: #c9b8a6;
+  font-size: 11px;
+}
+
+.form-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 35px;
+}
+
+.form-container {
+  width: 100%;
+  max-width: 410px;
+}
+
+.mobile-logo {
+  display: none;
+  margin-bottom: 45px;
+  color: var(--brown-dark);
+}
+
+.welcome-text h2 {
+  font-family: "Playfair Display", serif;
+  font-size: 34px;
+  font-weight: 600;
+  margin-top: 13px;
+}
+
+.welcome-text p {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 10px;
+  line-height: 1.7;
+}
+
+/* Kirish va ro'yxatdan o'tish tugmalari */
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 5px;
+  margin: 38px 0 25px;
+  background: #eee5d9;
+  border-radius: 10px;
+}
+
+.auth-tabs button {
+  padding: 12px 8px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: #806b5b;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.auth-tabs button:hover {
+  color: var(--brown-dark);
+}
+
+.auth-tabs button.active {
+  background: #6d4630;
+  color: #fffaf3;
+  box-shadow: 0 3px 10px #4b30201c;
+}
+
+/* Forma maydonlari */
+
+#fullNameField,
+#phoneField,
+.form-group {
+  margin-bottom: 17px;
+}
+
+#authForm label {
+  display: block;
+  margin-bottom: 8px;
+  color: #5e493a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+#authForm input {
+  width: 100%;
+  min-height: 53px;
+  padding: 14px 15px;
+  border: 1px solid #e5d8c8;
+  border-radius: 8px;
+  outline: none;
+  background: #fffdf9;
+  color: #281b14;
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#authForm input:focus {
+  border-color: var(--brown-light);
+  box-shadow: 0 0 0 3px rgba(98, 67, 47, 0.08);
+}
+
+#authForm input::placeholder {
+  color: #b7aa9b;
+}
+
+#authForm [hidden] {
+  display: none !important;
+}
+
+/* Asosiy yuborish tugmasi */
+
+#authForm > button[type="submit"] {
+  width: 100%;
+  min-height: 54px;
+  margin-top: 10px;
+  padding: 15px 20px;
+  border: 1px solid #6d4630;
+  border-radius: 8px;
+  background: #6d4630;
+  color: #fffaf3;
+  font-family: "DM Sans", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  box-shadow: 0 5px 14px #6d463025;
+  transition: background 0.25s ease,
+              transform 0.25s ease,
+              box-shadow 0.25s ease;
+}
+
+#authForm > button[type="submit"]:hover {
+  background: #4b3020;
+  border-color: #4b3020;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px #6d463035;
+}
+
+#authForm > button[type="submit"]:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+#authForm > button[type="submit"]:disabled {
+  opacity: 0.65;
+  cursor: wait;
+  transform: none;
+}
+
+/* Xabarlar */
+
+.message {
+  min-height: 18px;
+  margin-top: 15px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.message.error {
+  color: #b44335;
+}
+
+.message.success {
+  color: #47734c;
+}
+
+.form-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 55px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 10px;
+}
+
+/* Planshet va telefon */
+
+@media (max-width: 850px) {
+  .auth-wrapper {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .brand-side {
+    display: none;
+  }
+
+  .form-side {
+    min-height: calc(100vh - 24px);
+    padding: 30px 20px;
+  }
+
+  .form-container {
+    max-width: 440px;
+  }
+
+  .mobile-logo {
+    display: block;
+  }
+
+  .welcome-text h2 {
+    font-size: 30px;
+  }
+
+  .form-footer {
+    margin-top: 45px;
+  }
+}
+
+@media (max-width: 400px) {
+  .form-side {
+    padding: 25px 10px;
+  }
+
+  .welcome-text h2 {
+    font-size: 27px;
+  }
+
+  .form-footer {
+    font-size: 9px;
+  }
+
+  .auth-tabs button {
+    font-size: 12px;
+  }
+}
