@@ -35,6 +35,10 @@ const pieceCards = [
     document.getElementById("pieceCard4")
 ];
 
+const LOGIN_URL = "login.html?next=profile.html";
+
+const AVATAR_DATA_RE = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/;
+
 function getToken() {
     return localStorage.getItem("mizon_token");
 }
@@ -157,7 +161,7 @@ function setAvatar(avatarUrl, fullName, username) {
     if (
         avatarUrl &&
         typeof avatarUrl === "string" &&
-        /^https?:\/\//i.test(avatarUrl)
+        (/^https?:\/\//i.test(avatarUrl) || AVATAR_DATA_RE.test(avatarUrl))
     ) {
         const image = document.createElement("img");
 
@@ -186,7 +190,7 @@ async function loadProfile() {
     const token = getToken();
 
     if (!token) {
-        window.location.href = "index.html";
+        window.location.href = LOGIN_URL;
         return;
     }
 
@@ -199,7 +203,7 @@ async function loadProfile() {
 
         if (response.status === 401) {
             localStorage.removeItem("mizon_token");
-            window.location.href = "index.html";
+            window.location.href = LOGIN_URL;
             return;
         }
 
@@ -233,6 +237,14 @@ async function loadProfile() {
             adminLink.hidden = user.role !== "admin";
         }
 
+        // Google orqali kirganlarda telefon bo'lmaydi, g'olibga qo'ng'iroq qilish uchun kerak
+        if (!user.phone) {
+            showPromoMessage(
+                "Yutuq bo‘lsa siz bilan bog‘lanishimiz uchun “Profilni tahrirlash” orqali telefon raqamingizni kiriting.",
+                "info"
+            );
+        }
+
     } catch (error) {
         showPromoMessage(
             error.message || "Server bilan bog‘lanib bo‘lmadi.",
@@ -255,7 +267,7 @@ if (promoForm) {
         const token = getToken();
 
         if (!token) {
-            window.location.href = "index.html";
+            window.location.href = LOGIN_URL;
             return;
         }
 
@@ -283,7 +295,7 @@ if (promoForm) {
 
             if (response.status === 401) {
                 localStorage.removeItem("mizon_token");
-                window.location.href = "index.html";
+                window.location.href = LOGIN_URL;
                 return;
             }
 
@@ -323,13 +335,133 @@ function closeEditModal() {
     if (editModal) editModal.hidden = true;
 }
 
+// Fayldan tanlangan rasm (data URL). Bo'sh bo'lsa, havola maydoni ishlatiladi
+let editAvatarData = "";
+
+const editAvatarFile = document.getElementById("editAvatarFile");
+const editAvatarPreview = document.getElementById("editAvatarPreview");
+const editAvatarUrl = document.getElementById("editAvatar");
+
+function showEditAvatarPreview(src) {
+    if (!editAvatarPreview) return;
+
+    editAvatarPreview.replaceChildren();
+
+    const letter = (
+        (currentUser && (currentUser.full_name || currentUser.username)) || "M"
+    ).trim().charAt(0).toUpperCase();
+
+    if (src && (/^https?:\/\//i.test(src) || AVATAR_DATA_RE.test(src))) {
+        const image = document.createElement("img");
+
+        image.src = src;
+        image.alt = "Profil rasmi";
+        image.referrerPolicy = "no-referrer";
+        image.onerror = () => {
+            image.remove();
+            editAvatarPreview.textContent = letter;
+        };
+
+        editAvatarPreview.appendChild(image);
+    } else {
+        editAvatarPreview.textContent = letter;
+    }
+}
+
+// Rasm kvadrat qilib kesiladi va 256x256 gacha kichraytiriladi (server uchun yengil bo'lishi uchun)
+function avatarFileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        if (!file || !/^image\/(png|jpeg|webp)$/.test(file.type)) {
+            reject(new Error("Faqat PNG, JPG yoki WEBP rasm yuklang."));
+            return;
+        }
+
+        if (file.size > 15 * 1024 * 1024) {
+            reject(new Error("Rasm hajmi 15 MB dan oshmasligi kerak."));
+            return;
+        }
+
+        const objectUrl = URL.createObjectURL(file);
+        const img = new Image();
+
+        img.onload = () => {
+            URL.revokeObjectURL(objectUrl);
+
+            const size = 256;
+            const side = Math.min(img.naturalWidth, img.naturalHeight);
+            const sx = (img.naturalWidth - side) / 2;
+            const sy = (img.naturalHeight - side) / 2;
+
+            const canvas = document.createElement("canvas");
+            canvas.width = size;
+            canvas.height = size;
+
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, size, size);
+            ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+
+            resolve(canvas.toDataURL("image/jpeg", 0.85));
+        };
+
+        img.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error("Rasmni o‘qib bo‘lmadi."));
+        };
+
+        img.src = objectUrl;
+    });
+}
+
 if (editProfileBtn && editModal) {
+    document.getElementById("editAvatarPick").addEventListener("click", () => {
+        editAvatarFile.click();
+    });
+
+    document.getElementById("editAvatarClear").addEventListener("click", () => {
+        editAvatarData = "";
+        editAvatarUrl.value = "";
+        editAvatarFile.value = "";
+        showEditAvatarPreview("");
+    });
+
+    editAvatarFile.addEventListener("change", async () => {
+        const file = editAvatarFile.files[0];
+
+        if (!file) return;
+
+        try {
+            editAvatarData = await avatarFileToDataUrl(file);
+            editAvatarUrl.value = "";
+            showEditAvatarPreview(editAvatarData);
+
+            editMessage.textContent = "";
+            editMessage.className = "promo-message";
+        } catch (error) {
+            editMessage.textContent = error.message;
+            editMessage.className = "promo-message error";
+        } finally {
+            editAvatarFile.value = "";
+        }
+    });
+
+    editAvatarUrl.addEventListener("input", () => {
+        editAvatarData = "";
+        showEditAvatarPreview(editAvatarUrl.value.trim());
+    });
+
     editProfileBtn.addEventListener("click", () => {
         if (!currentUser) return;
 
         document.getElementById("editName").value = currentUser.full_name || "";
         document.getElementById("editPhone").value = currentUser.phone || "";
-        document.getElementById("editAvatar").value = currentUser.avatar || "";
+
+        const currentAvatar = currentUser.avatar || "";
+        const isDataAvatar = currentAvatar.startsWith("data:");
+
+        editAvatarData = isDataAvatar ? currentAvatar : "";
+        editAvatarUrl.value = isDataAvatar ? "" : currentAvatar;
+        showEditAvatarPreview(currentAvatar);
         editMessage.textContent = "";
         editMessage.className = "promo-message";
 
@@ -362,7 +494,7 @@ if (editProfileBtn && editModal) {
                 body: JSON.stringify({
                     fullName: document.getElementById("editName").value,
                     phone: document.getElementById("editPhone").value,
-                    avatar: document.getElementById("editAvatar").value
+                    avatar: editAvatarData || editAvatarUrl.value.trim()
                 })
             });
 
@@ -370,7 +502,7 @@ if (editProfileBtn && editModal) {
 
             if (response.status === 401) {
                 localStorage.removeItem("mizon_token");
-                window.location.href = "index.html";
+                window.location.href = LOGIN_URL;
                 return;
             }
 
@@ -393,7 +525,7 @@ if (editProfileBtn && editModal) {
 if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
         localStorage.removeItem("mizon_token");
-        window.location.href = "index.html";
+        window.location.href = "books.html";
     });
 }
 

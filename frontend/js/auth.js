@@ -62,7 +62,21 @@ function setMode(mode) {
 loginTab.addEventListener("click", () => setMode("login"));
 registerTab.addEventListener("click", () => setMode("register"));
 
+// ?next=books.html?checkout=1 kabi manzilga qaytish (faqat saytning o'z sahifalari)
+function safeNext() {
+  const next = new URLSearchParams(window.location.search).get("next") || "";
+
+  return /^[A-Za-z0-9_-]+\.html(\?[A-Za-z0-9_=&-]*)?$/.test(next) ? next : null;
+}
+
 function goAfterLogin(user) {
+  const next = safeNext();
+
+  if (next) {
+    window.location.href = next;
+    return;
+  }
+
   window.location.href = user?.role === "admin" ? "admin.html" : "profile.html";
 }
 
@@ -171,6 +185,75 @@ authForm.addEventListener("submit", async (event) => {
   }
 });
 
+/* GOOGLE ORQALI KIRISH */
+
+async function handleGoogleCredential(response) {
+  showMessage("");
+
+  try {
+    const result = await fetch(`${API_URL}/auth/google`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ credential: response.credential }),
+    });
+
+    const data = await result.json().catch(() => ({}));
+
+    if (!result.ok) {
+      throw new Error(data.message || "Google orqali kirib bo‘lmadi.");
+    }
+
+    saveSession(data);
+  } catch (error) {
+    showMessage(
+      error instanceof TypeError
+        ? "Server bilan aloqa yo‘q. Backend ishlayotganini tekshiring."
+        : error.message,
+    );
+  }
+}
+
+function renderGoogleButton(clientId, attempt = 0) {
+  if (!window.google?.accounts?.id) {
+    // Google skripti hali yuklanmagan bo'lishi mumkin
+    if (attempt < 50) {
+      setTimeout(() => renderGoogleButton(clientId, attempt + 1), 200);
+    }
+    return;
+  }
+
+  const holder = document.getElementById("googleBtn");
+  const box = document.getElementById("googleAuth");
+
+  google.accounts.id.initialize({
+    client_id: clientId,
+    callback: handleGoogleCredential,
+  });
+
+  google.accounts.id.renderButton(holder, {
+    theme: "outline",
+    size: "large",
+    shape: "rectangular",
+    text: "continue_with",
+    width: Math.min(400, Math.max(240, holder.parentElement.offsetWidth || 340)),
+  });
+
+  box.hidden = false;
+}
+
+async function setupGoogle() {
+  try {
+    const response = await fetch(`${API_URL}/config`);
+    const data = await response.json();
+
+    if (data.googleClientId) {
+      renderGoogleButton(data.googleClientId);
+    }
+  } catch (error) {
+    console.error("Google sozlamalarini olishda xato:", error);
+  }
+}
+
 // Avvalgi sessiya bo‘lsa, foydalanuvchi rolini serverdan tekshirib, mos sahifaga o‘tkazadi
 async function checkSession() {
   const token = localStorage.getItem("mizon_token");
@@ -200,3 +283,4 @@ async function checkSession() {
 
 setMode("login");
 checkSession();
+setupGoogle();

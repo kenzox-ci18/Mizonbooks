@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS users (
     created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     won_at             TIMESTAMPTZ,          -- 4 ta bo'lakni yig'gan vaqt
     prize_status       VARCHAR(20),          -- 'pending' | 'delivered'
-    prize_delivered_at TIMESTAMPTZ
+    prize_delivered_at TIMESTAMPTZ,
+    google_id          VARCHAR(64) UNIQUE    -- Google orqali kirgan foydalanuvchi (sub)
 );
 
 CREATE TABLE IF NOT EXISTS books (

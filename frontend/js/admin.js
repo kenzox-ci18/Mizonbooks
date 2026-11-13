@@ -106,10 +106,22 @@ async function apiRequest(endpoint, options = {}) {
     },
   });
 
-  const data = await response.json();
+  // Server (yoki oraliq proxy) JSON bo'lmagan javob qaytarsa ham aniq xabar chiqadi
+  let data = {};
+
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
 
   if (!response.ok) {
-    throw new Error(data.message || "So‘rov bajarilmadi.");
+    throw new Error(
+      data.message ||
+        (response.status === 413
+          ? "Fayl hajmi server uchun juda katta. Kichikroq rasm tanlang."
+          : `Server xatosi (HTTP ${response.status}). Backend yangi versiyada ishlayotganini tekshiring.`),
+    );
   }
 
   return data;
@@ -177,33 +189,49 @@ async function fileToCoverDataUrl(file, maxSide = 600, quality = 0.82) {
   return canvas.toDataURL("image/jpeg", quality);
 }
 
-// Xatcho'p: profildagi xatcho'p nisbatiga (130x340) markazdan moslab kesiladi
+// Xatcho'p: profildagi xatcho'p nisbatiga (130x340) markazdan moslab kesiladi.
+// Server va hosting so'rov hajmini cheklashi mumkin, shuning uchun rasm ~800 KB gacha siqiladi.
+const BOOKMARK_MAX_LENGTH = 800000;
+
 async function fileToBookmarkDataUrl(file) {
   const img = await loadImageFile(file);
 
-  const width = 520;
-  const height = 1360;
+  const sizes = [
+    [520, 1360],
+    [390, 1020],
+    [260, 680],
+  ];
 
-  const scale = Math.max(width / img.naturalWidth, height / img.naturalHeight);
-  const drawWidth = img.naturalWidth * scale;
-  const drawHeight = img.naturalHeight * scale;
+  let dataUrl = "";
 
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
+  for (const [width, height] of sizes) {
+    const scale = Math.max(width / img.naturalWidth, height / img.naturalHeight);
+    const drawWidth = img.naturalWidth * scale;
+    const drawHeight = img.naturalHeight * scale;
 
-  const ctx = canvas.getContext("2d");
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, width, height);
-  ctx.drawImage(
-    img,
-    (width - drawWidth) / 2,
-    (height - drawHeight) / 2,
-    drawWidth,
-    drawHeight,
-  );
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
 
-  return canvas.toDataURL("image/jpeg", 0.9);
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(
+      img,
+      (width - drawWidth) / 2,
+      (height - drawHeight) / 2,
+      drawWidth,
+      drawHeight,
+    );
+
+    for (let quality = 0.9; quality >= 0.5; quality -= 0.1) {
+      dataUrl = canvas.toDataURL("image/jpeg", quality);
+
+      if (dataUrl.length <= BOOKMARK_MAX_LENGTH) return dataUrl;
+    }
+  }
+
+  return dataUrl;
 }
 
 /* BOOK ELEMENTS */
@@ -1195,12 +1223,12 @@ function refreshSection(name) {
 
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
   localStorage.removeItem("mizon_token");
-  window.location.href = "index.html";
+  window.location.href = "books.html";
 });
 
 async function initAdmin() {
   if (!localStorage.getItem("mizon_token")) {
-    window.location.href = "index.html";
+    window.location.href = "login.html?next=admin.html";
     return;
   }
 
@@ -1214,7 +1242,7 @@ async function initAdmin() {
   } catch (error) {
     if (/Token|Avval/i.test(error.message)) {
       localStorage.removeItem("mizon_token");
-      window.location.href = "index.html";
+      window.location.href = "login.html?next=admin.html";
       return;
     }
 

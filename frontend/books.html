@@ -14,14 +14,24 @@
 <body>
 
     <header class="shop-header">
-        <a href="index.html" class="shop-logo">MizonBooks</a>
+        <a href="books.html" class="shop-logo">MizonBooks</a>
 
         <nav class="shop-nav">
             <a href="books.html" class="nav-active">Kitoblar</a>
             <a href="profile.html">Profilim</a>
         </nav>
 
-        <a href="profile.html" class="account-link">Shaxsiy kabinet</a>
+        <div class="header-actions">
+            <button type="button" class="cart-button" id="cartBtn" aria-label="Savatni ochish">
+                <span class="cart-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.4a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 7H6"/></svg>
+                </span>
+                Savat
+                <span class="cart-count" id="cartCount" hidden>0</span>
+            </button>
+
+            <a href="profile.html" class="account-link">Shaxsiy kabinet</a>
+        </div>
     </header>
 
     <main>
@@ -113,7 +123,7 @@
     </main>
 
     <footer class="shop-footer">
-        <a href="index.html" class="shop-logo">MizonBooks</a>
+        <a href="books.html" class="shop-logo">MizonBooks</a>
         <span>© 2026 MizonBooks. Barcha huquqlar himoyalangan.</span>
         <a href="profile.html">Shaxsiy kabinet</a>
     </footer>
@@ -123,17 +133,15 @@
             <button class="modal-close" type="button" data-close-modal aria-label="Yopish">×</button>
 
             <span class="eyebrow">BUYURTMA BERISH</span>
-            <h2 id="orderTitle">Kitobni buyurtma qilish</h2>
+            <h2 id="orderTitle">Buyurtmani rasmiylashtirish</h2>
 
             <p class="modal-description">
                 Ma’lumotlaringizni kiriting. Buyurtmangizni qabul qilish uchun siz bilan bog‘lanamiz.
             </p>
 
-            <div class="selected-book" id="selectedBook"></div>
+            <div class="order-summary" id="selectedBook"></div>
 
             <form id="orderForm">
-                <input type="hidden" id="selectedBookId" name="bookId">
-
                 <label for="customerName">Ismingiz</label>
                 <input
                     id="customerName"
@@ -170,6 +178,40 @@
             </form>
         </div>
     </div>
+
+    <div class="cart-overlay" id="cartOverlay"></div>
+
+    <aside class="cart-drawer" id="cartDrawer" aria-label="Savat" aria-hidden="true">
+        <div class="cart-head">
+            <div>
+                <span class="eyebrow">SIZNING TANLOVINGIZ</span>
+                <h2>Savat</h2>
+            </div>
+
+            <button class="cart-close" type="button" id="cartClose" aria-label="Savatni yopish">×</button>
+        </div>
+
+        <div class="cart-items" id="cartItems"></div>
+
+        <div class="cart-empty" id="cartEmpty">
+            <span aria-hidden="true">📚</span>
+            <p>Savatingiz hozircha bo‘sh.</p>
+            <small>Yoqqan kitobingiz ostidagi “Savatga qo‘shish” tugmasini bosing.</small>
+        </div>
+
+        <div class="cart-foot" id="cartFoot">
+            <div class="cart-total">
+                <span>Jami</span>
+                <strong id="cartTotal">0 so‘m</strong>
+            </div>
+
+            <button type="button" class="order-submit" id="checkoutBtn">Buyurtma berish</button>
+
+            <p class="cart-hint" id="cartHint"></p>
+        </div>
+    </aside>
+
+    <div class="cart-toast" id="cartToast" role="status" aria-live="polite"></div>
 
     <script src="js/config.js"></script>
     <script src="js/books.js"></script>

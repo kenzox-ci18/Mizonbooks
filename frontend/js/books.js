@@ -40,6 +40,259 @@ async function loadCurrentUser() {
 
 let books = [];
 
+/* CART (SAVAT) */
+
+const CART_KEY = "mizon_cart";
+const MAX_PER_BOOK = 20;
+
+function readCart() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+
+    if (!Array.isArray(raw)) return [];
+
+    return raw
+      .map((item) => ({
+        id: String(item?.id ?? ""),
+        qty: Math.floor(Number(item?.qty)),
+      }))
+      .filter((item) => item.id && item.id.length <= 64 && item.qty >= 1)
+      .map((item) => ({ id: item.id, qty: Math.min(item.qty, MAX_PER_BOOK) }));
+  } catch {
+    return [];
+  }
+}
+
+let cart = readCart();
+
+function saveCart() {
+  try {
+    localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  } catch {
+    // brauzer saqlashga ruxsat bermasa, savat shu sahifa ochiq turguncha ishlaydi
+  }
+
+  renderCart();
+}
+
+function findBook(id) {
+  return books.find((book) => String(book.id) === String(id));
+}
+
+function maxQty(book) {
+  return Math.max(0, Math.min(Number(book.stock) || 0, MAX_PER_BOOK));
+}
+
+// Savatdagi har bir qator: { item, book }. Katalogdan yo'qolgan kitoblar tushmaydi
+function cartLines() {
+  return cart
+    .map((item) => ({ item, book: findBook(item.id) }))
+    .filter((line) => line.book);
+}
+
+// Katalog yuklangach: sotuvdan chiqqan kitoblarni olib tashlaydi, sonini ombordagi miqdorga moslaydi
+function reconcileCart() {
+  cart = cart
+    .map((item) => {
+      const book = findBook(item.id);
+      return book ? { id: item.id, qty: Math.min(item.qty, maxQty(book)) } : null;
+    })
+    .filter((item) => item && item.qty >= 1);
+
+  saveCart();
+}
+
+function cartTotal() {
+  return cartLines().reduce(
+    (sum, { item, book }) => sum + Number(book.price) * item.qty,
+    0,
+  );
+}
+
+const cartBtn = document.getElementById("cartBtn");
+const cartCount = document.getElementById("cartCount");
+const cartDrawer = document.getElementById("cartDrawer");
+const cartOverlay = document.getElementById("cartOverlay");
+const cartItemsEl = document.getElementById("cartItems");
+const cartEmptyEl = document.getElementById("cartEmpty");
+const cartFootEl = document.getElementById("cartFoot");
+const cartTotalEl = document.getElementById("cartTotal");
+const cartHintEl = document.getElementById("cartHint");
+const checkoutBtn = document.getElementById("checkoutBtn");
+const cartToast = document.getElementById("cartToast");
+
+function showToast(text) {
+  cartToast.textContent = text;
+  cartToast.classList.add("show");
+
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => cartToast.classList.remove("show"), 2200);
+}
+
+function addToCart(bookId) {
+  const book = findBook(bookId);
+
+  if (!book || maxQty(book) < 1) return;
+
+  const existing = cart.find((item) => item.id === String(book.id));
+
+  if (existing) {
+    if (existing.qty >= maxQty(book)) {
+      showToast(`Omborda faqat ${maxQty(book)} ta qolgan.`);
+      return;
+    }
+
+    existing.qty += 1;
+  } else {
+    cart.push({ id: String(book.id), qty: 1 });
+  }
+
+  saveCart();
+  showToast(`“${book.name}” savatga qo‘shildi.`);
+}
+
+function changeQty(bookId, delta) {
+  const item = cart.find((entry) => entry.id === String(bookId));
+  const book = findBook(bookId);
+
+  if (!item || !book) return;
+
+  const next = item.qty + delta;
+
+  if (next < 1) {
+    removeFromCart(bookId);
+    return;
+  }
+
+  if (next > maxQty(book)) {
+    showToast(`Omborda faqat ${maxQty(book)} ta qolgan.`);
+    return;
+  }
+
+  item.qty = next;
+  saveCart();
+}
+
+function removeFromCart(bookId) {
+  cart = cart.filter((item) => item.id !== String(bookId));
+  saveCart();
+}
+
+function renderCart() {
+  const lines = cartLines();
+  const totalQty = cart.reduce((sum, item) => sum + item.qty, 0);
+
+  cartCount.textContent = totalQty;
+  cartCount.hidden = totalQty === 0;
+
+  cartItemsEl.replaceChildren();
+
+  cartEmptyEl.hidden = lines.length > 0;
+  cartFootEl.hidden = lines.length === 0;
+  cartItemsEl.hidden = lines.length === 0;
+
+  cartTotalEl.textContent = formatPrice(cartTotal());
+
+  cartHintEl.textContent = localStorage.getItem("mizon_token")
+    ? ""
+    : "Buyurtma berish uchun tizimga kirasiz yoki Google orqali ro‘yxatdan o‘tasiz — savatingiz saqlanib qoladi.";
+
+  lines.forEach(({ item, book }) => {
+    const row = document.createElement("div");
+    row.className = "cart-item";
+
+    const image = document.createElement("img");
+    image.src = getBookImage(book);
+    image.alt = book.name;
+    image.onerror = () => {
+      image.onerror = null;
+      image.src = FALLBACK_IMAGE;
+    };
+
+    const info = document.createElement("div");
+    info.className = "cart-item-info";
+
+    const title = document.createElement("strong");
+    title.textContent = book.name;
+
+    const author = document.createElement("small");
+    author.textContent = book.author;
+
+    const price = document.createElement("span");
+    price.className = "cart-item-price";
+    price.textContent = formatPrice(Number(book.price) * item.qty);
+
+    const stepper = document.createElement("div");
+    stepper.className = "qty-stepper";
+
+    const minus = document.createElement("button");
+    minus.type = "button";
+    minus.textContent = "−";
+    minus.setAttribute("aria-label", "Kamaytirish");
+    minus.addEventListener("click", () => changeQty(book.id, -1));
+
+    const qty = document.createElement("span");
+    qty.textContent = item.qty;
+
+    const plus = document.createElement("button");
+    plus.type = "button";
+    plus.textContent = "+";
+    plus.setAttribute("aria-label", "Ko‘paytirish");
+    plus.disabled = item.qty >= maxQty(book);
+    plus.addEventListener("click", () => changeQty(book.id, 1));
+
+    stepper.append(minus, qty, plus);
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "cart-remove";
+    remove.textContent = "×";
+    remove.setAttribute("aria-label", "Savatdan olib tashlash");
+    remove.addEventListener("click", () => removeFromCart(book.id));
+
+    info.append(title, author, stepper);
+    row.append(image, info, price, remove);
+    cartItemsEl.append(row);
+  });
+}
+
+function openCart() {
+  renderCart();
+  cartDrawer.classList.add("open");
+  cartOverlay.classList.add("show");
+  cartDrawer.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+}
+
+function closeCart() {
+  cartDrawer.classList.remove("open");
+  cartOverlay.classList.remove("show");
+  cartDrawer.setAttribute("aria-hidden", "true");
+
+  if (!orderModal.classList.contains("show")) {
+    document.body.classList.remove("modal-open");
+  }
+}
+
+cartBtn.addEventListener("click", openCart);
+cartOverlay.addEventListener("click", closeCart);
+document.getElementById("cartClose").addEventListener("click", closeCart);
+
+// Tizimga kirmagan mijoz kirish sahifasiga o'tadi va buyurtmani davom ettirish uchun qaytadi
+checkoutBtn.addEventListener("click", async () => {
+  if (cartLines().length === 0) return;
+
+  await userReady;
+
+  if (!currentUser) {
+    window.location.href = `login.html?next=${encodeURIComponent("books.html?checkout=1")}`;
+    return;
+  }
+
+  closeCart();
+  openOrderModal();
+});
+
 async function loadBooks() {
   try {
     const response = await fetch(`${API_URL}/books`);
@@ -52,6 +305,7 @@ async function loadBooks() {
     books = data.books || [];
     emptyState.innerHTML = emptyStateHTML;
     renderBooks();
+    reconcileCart();
   } catch (error) {
     console.error("Kitoblarni yuklashda xatolik:", error);
 
@@ -73,7 +327,6 @@ const emptyState = document.getElementById("emptyState");
 const orderModal = document.getElementById("orderModal");
 const orderForm = document.getElementById("orderForm");
 const selectedBook = document.getElementById("selectedBook");
-const selectedBookId = document.getElementById("selectedBookId");
 const orderMessage = document.getElementById("orderMessage");
 
 let activeCategory = "all";
@@ -180,7 +433,7 @@ function renderBooks() {
       buyButton.textContent = "Tugagan";
       buyButton.disabled = true;
     } else {
-      buyButton.textContent = "Buyurtma berish";
+      buyButton.textContent = "Savatga qo‘shish";
     }
 
     bottom.append(price, buyButton);
@@ -193,16 +446,13 @@ function renderBooks() {
 
 /* ORDER MODAL */
 
-function openOrderModal(bookId) {
-  const book = books.find(
-    (item) => String(item.id) === String(bookId) && Number(item.stock) > 0,
-  );
+function openOrderModal() {
+  const lines = cartLines();
 
-  if (!book) return;
+  if (lines.length === 0) return;
 
   orderForm.reset();
 
-  selectedBookId.value = book.id;
   orderMessage.textContent = "";
   orderMessage.className = "order-message";
   orderForm.querySelector(".order-submit").disabled = false;
@@ -215,30 +465,46 @@ function openOrderModal(bookId) {
 
   selectedBook.replaceChildren();
 
-  const image = document.createElement("img");
-  image.src = getBookImage(book);
-  image.alt = book.name;
+  lines.forEach(({ item, book }) => {
+    const row = document.createElement("div");
+    row.className = "order-summary-row";
 
-  const details = document.createElement("div");
+    const title = document.createElement("span");
+    title.textContent = `${book.name} × ${item.qty}`;
 
-  const title = document.createElement("strong");
-  title.textContent = book.name;
+    const price = document.createElement("strong");
+    price.textContent = formatPrice(Number(book.price) * item.qty);
 
-  const price = document.createElement("span");
-  price.textContent = formatPrice(Number(book.price));
+    row.append(title, price);
+    selectedBook.append(row);
+  });
 
-  details.append(title, price);
-  selectedBook.append(image, details);
+  const total = document.createElement("div");
+  total.className = "order-summary-row order-summary-total";
+
+  const totalLabel = document.createElement("span");
+  totalLabel.textContent = "Jami";
+
+  const totalValue = document.createElement("strong");
+  totalValue.textContent = formatPrice(cartTotal());
+
+  total.append(totalLabel, totalValue);
+  selectedBook.append(total);
 
   orderModal.classList.add("show");
   document.body.classList.add("modal-open");
 
-  document.getElementById("customerName").focus();
+  document.getElementById(
+    document.getElementById("customerName").value ? "customerPhone" : "customerName",
+  ).focus();
 }
 
 function hideOrderModal() {
   orderModal.classList.remove("show");
-  document.body.classList.remove("modal-open");
+
+  if (!cartDrawer.classList.contains("open")) {
+    document.body.classList.remove("modal-open");
+  }
 }
 
 /* SEARCH */
@@ -271,7 +537,7 @@ booksGrid.addEventListener("click", (event) => {
 
   if (!button) return;
 
-  openOrderModal(button.dataset.id);
+  addToCart(button.dataset.id);
 });
 
 /* CLOSE MODAL */
@@ -281,8 +547,12 @@ orderModal.querySelectorAll("[data-close-modal]").forEach((button) => {
 });
 
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && orderModal.classList.contains("show")) {
+  if (event.key !== "Escape") return;
+
+  if (orderModal.classList.contains("show")) {
     hideOrderModal();
+  } else if (cartDrawer.classList.contains("open")) {
+    closeCart();
   }
 });
 
@@ -310,8 +580,14 @@ orderForm.addEventListener("submit", async (event) => {
   }
 
   if (!localStorage.getItem("mizon_token")) {
-    orderMessage.textContent =
-      "Buyurtma berish uchun avval tizimga kiring yoki ro‘yxatdan o‘ting.";
+    window.location.href = `login.html?next=${encodeURIComponent("books.html?checkout=1")}`;
+    return;
+  }
+
+  const lines = cartLines();
+
+  if (lines.length === 0) {
+    orderMessage.textContent = "Savatingiz bo‘sh.";
     orderMessage.className = "order-message error";
     return;
   }
@@ -328,11 +604,14 @@ orderForm.addEventListener("submit", async (event) => {
 
     if (token) headers.Authorization = `Bearer ${token}`;
 
-    const response = await fetch(`${API_URL}/orders`, {
+    const response = await fetch(`${API_URL}/orders/cart`, {
       method: "POST",
       headers,
       body: JSON.stringify({
-        bookId: selectedBookId.value,
+        items: lines.map(({ item, book }) => ({
+          bookId: book.id,
+          quantity: item.qty,
+        })),
         name,
         phone,
         note,
@@ -350,13 +629,19 @@ orderForm.addEventListener("submit", async (event) => {
     }
 
     if (!response.ok) {
-      throw new Error(data.message || "Buyurtma yuborilmadi.");
+      const failure = new Error(data.message || "Buyurtma yuborilmadi.");
+      failure.status = response.status;
+      failure.unavailable = data.unavailable;
+      throw failure;
     }
 
     orderMessage.textContent = data.message;
     orderMessage.className = "order-message success";
     orderForm.reset();
     orderSucceeded = true;
+
+    cart = [];
+    saveCart();
 
     setTimeout(hideOrderModal, 2500);
   } catch (error) {
@@ -365,6 +650,17 @@ orderForm.addEventListener("submit", async (event) => {
         ? "Server bilan aloqa yo‘q. Birozdan keyin urinib ko‘ring."
         : error.message;
     orderMessage.className = "order-message error";
+
+    if (error.status === 401) {
+      // Sessiya muddati tugagan: qayta kirib, savat bilan davom etiladi
+      localStorage.removeItem("mizon_token");
+      setTimeout(() => {
+        window.location.href = `login.html?next=${encodeURIComponent("books.html?checkout=1")}`;
+      }, 1500);
+    } else if (error.unavailable) {
+      // Kitob tugagan bo'lishi mumkin: katalog va savat yangilanadi
+      loadBooks();
+    }
   } finally {
     submitButton.disabled = orderSucceeded;
   }
@@ -372,5 +668,23 @@ orderForm.addEventListener("submit", async (event) => {
 
 /* INITIALIZATION */
 
-loadCurrentUser();
-loadBooks();
+const userReady = loadCurrentUser();
+
+renderCart();
+
+(async function init() {
+  await Promise.all([userReady, loadBooks()]);
+
+  // Kirish sahifasidan buyurtmani davom ettirish uchun qaytgan bo'lsa
+  const params = new URLSearchParams(window.location.search);
+
+  if (params.get("checkout") === "1") {
+    window.history.replaceState({}, "", "books.html");
+
+    if (currentUser && cartLines().length > 0) {
+      openOrderModal();
+    } else if (cartLines().length > 0) {
+      openCart();
+    }
+  }
+})();

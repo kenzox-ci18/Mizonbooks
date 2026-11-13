@@ -235,7 +235,18 @@
             <label for="editPhone">Telefon raqam</label>
             <input type="tel" id="editPhone" maxlength="30" required>
 
-            <label for="editAvatar">Profil rasmi (havola, ixtiyoriy)</label>
+            <label for="editAvatarFile">Profil rasmi</label>
+            <div class="avatar-upload">
+                <div class="avatar-upload-preview" id="editAvatarPreview">M</div>
+
+                <div class="avatar-upload-actions">
+                    <input type="file" id="editAvatarFile" accept="image/png,image/jpeg,image/webp" hidden>
+                    <button type="button" class="edit-cancel" id="editAvatarPick">Fayldan tanlash</button>
+                    <button type="button" class="edit-cancel" id="editAvatarClear">Olib tashlash</button>
+                </div>
+            </div>
+
+            <label for="editAvatar">Yoki rasm havolasi (ixtiyoriy)</label>
             <input type="url" id="editAvatar" maxlength="1000" placeholder="https://...">
 
             <p id="editMessage" class="promo-message" role="status"></p>

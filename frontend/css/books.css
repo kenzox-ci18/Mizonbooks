@@ -847,3 +847,372 @@ body.modal-open {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* HEADER: savat tugmasi */
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cart-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--brown);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: 0.25s;
+}
+
+.cart-button:hover {
+  border-color: var(--gold);
+  background: var(--soft);
+}
+
+.cart-icon {
+  display: inline-flex;
+}
+
+.cart-count {
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--brown);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* SAVAT PANELI */
+
+.cart-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgba(30, 20, 14, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.cart-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.cart-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 31;
+  width: min(430px, 100%);
+  display: flex;
+  flex-direction: column;
+  background: var(--cream);
+  box-shadow: -12px 0 40px rgba(30, 20, 14, 0.18);
+  transform: translateX(100%);
+  visibility: hidden;
+  transition: transform 0.3s ease, visibility 0.3s;
+}
+
+.cart-drawer.open {
+  transform: translateX(0);
+  visibility: visible;
+}
+
+.cart-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 28px 28px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cart-head h2 {
+  margin-top: 8px;
+  color: var(--brown);
+  font-family: "Playfair Display", serif;
+  font-size: 28px;
+}
+
+.cart-close {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.cart-items {
+  flex: 1;
+  padding: 8px 28px;
+  overflow-y: auto;
+}
+
+.cart-item {
+  display: grid;
+  grid-template-columns: 56px 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.cart-item img {
+  width: 56px;
+  height: 76px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: var(--soft);
+}
+
+.cart-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.cart-item-info strong {
+  color: var(--brown);
+  font-family: "Playfair Display", serif;
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.cart-item-info small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.cart-item-price {
+  color: var(--brown-light);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.qty-stepper {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: white;
+}
+
+.qty-stepper button {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--brown);
+  font-size: 16px;
+}
+
+.qty-stepper button:hover:not(:disabled) {
+  background: var(--soft);
+}
+
+.qty-stepper button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.qty-stepper span {
+  min-width: 26px;
+  text-align: center;
+  color: var(--brown);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cart-remove {
+  align-self: flex-start;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.cart-remove:hover {
+  color: #a33d32;
+}
+
+.cart-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 30px;
+  text-align: center;
+  color: var(--gold);
+}
+
+.cart-empty > span {
+  font-size: 38px;
+}
+
+.cart-empty p {
+  color: var(--brown);
+  font-family: "Playfair Display", serif;
+  font-size: 18px;
+}
+
+.cart-empty small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.cart-foot {
+  padding: 20px 28px 26px;
+  border-top: 1px solid var(--border);
+  background: var(--cream);
+}
+
+.cart-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.cart-total strong {
+  color: var(--brown);
+  font-family: "Playfair Display", serif;
+  font-size: 22px;
+}
+
+.cart-hint {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.cart-hint:empty {
+  display: none;
+}
+
+.cart-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  z-index: 60;
+  max-width: calc(100% - 40px);
+  padding: 13px 20px;
+  border-radius: 8px;
+  background: var(--brown);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(30, 20, 14, 0.25);
+  transform: translate(-50%, 20px);
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.25s ease;
+}
+
+.cart-toast.show {
+  transform: translate(-50%, 0);
+  opacity: 1;
+}
+
+/* Buyurtma oynasidagi savat xulosasi */
+
+.order-summary {
+  margin: 22px 0 6px;
+  padding: 13px 15px;
+  background: var(--soft);
+  border-radius: 7px;
+}
+
+.order-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 7px 0;
+  color: var(--brown);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.order-summary-row strong {
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+.order-summary-total {
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-weight: 700;
+}
+
+.order-summary-total strong {
+  color: var(--brown);
+  font-family: "Playfair Display", serif;
+  font-size: 16px;
+}
+
+@media (max-width: 700px) {
+  .header-actions {
+    gap: 8px;
+  }
+
+  .cart-button,
+  .account-link {
+    padding: 10px 12px;
+  }
+
+  .cart-head,
+  .cart-items,
+  .cart-foot {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .cart-item {
+    grid-template-columns: 50px 1fr auto;
+  }
+
+  .cart-item img {
+    grid-row: 1 / span 2;
+  }
+
+  .cart-item-info {
+    grid-row: 1 / span 2;
+  }
+
+  .cart-remove {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .cart-item-price {
+    grid-column: 3;
+    grid-row: 2;
+    align-self: end;
+  }
+}

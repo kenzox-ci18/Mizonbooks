@@ -1,4 +1,4 @@
-console.log("ISHLAYOTGAN SERVER:", __filename);
+﻿console.log("ISHLAYOTGAN SERVER:", __filename);
 
 require("dotenv").config();
 
@@ -122,12 +122,17 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
+// Frontend uchun ochiq sozlamalar (Google Client ID sir emas, brauzerga berilishi kerak)
+app.get("/api/config", (req, res) => {
+  res.json({ googleClientId: googleClientId() || null });
+});
+
 // RO'YXATDAN O'TISH
 app.post("/api/auth/register", async (req, res) => {
   try {
     const body = req.body || {};
 
-    // Ism "fullName" yoki "full_name" nomi bilan kelishi mumkin — ikkalasi ham qabul qilinadi
+    // Ism "fullName" yoki "full_name" nomi bilan kelishi mumkin вЂ” ikkalasi ham qabul qilinadi
     const cleanName = String(body.fullName ?? body.full_name ?? "").trim();
     const cleanUsername = String(body.username ?? "")
       .trim()
@@ -191,7 +196,7 @@ app.post("/api/auth/register", async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 12);
 
     // .env dagi ADMIN_USERNAME bilan ro'yxatdan o'tgan odam darhol admin bo'ladi
-    const role = cleanUsername === adminUsername() ? "admin" : "user";
+    const role = cleanUsername === adminUsername() ? "admin" : "customer";
 
     const result = await pool.query(
       `INSERT INTO users
@@ -210,7 +215,7 @@ app.post("/api/auth/register", async (req, res) => {
       user,
     });
   } catch (error) {
-    console.error("Register error:", error.message);
+    console.error("Register error:", error);
 
     if (error.code === "23505") {
       return res.status(409).json({
@@ -306,6 +311,202 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
+// ======================= GOOGLE ORQALI KIRISH =======================
+
+const GOOGLE_CERTS_URL = "https://www.googleapis.com/oauth2/v3/certs";
+const googleCertCache = { fetchedAt: 0, keys: new Map() };
+
+function googleClientId() {
+  return (process.env.GOOGLE_CLIENT_ID || "").trim();
+}
+
+async function loadGoogleCerts() {
+  const response = await fetch(GOOGLE_CERTS_URL);
+
+  if (!response.ok) {
+    throw new Error("Google kalitlarini olib bo'lmadi.");
+  }
+
+  const data = await response.json();
+  const keys = new Map();
+
+  for (const jwk of data.keys || []) {
+    if (jwk.kid && jwk.kty === "RSA") {
+      keys.set(
+        jwk.kid,
+        crypto
+          .createPublicKey({ key: jwk, format: "jwk" })
+          .export({ type: "spki", format: "pem" }),
+      );
+    }
+  }
+
+  googleCertCache.keys = keys;
+  googleCertCache.fetchedAt = Date.now();
+}
+
+async function getGoogleKey(kid) {
+  const age = Date.now() - googleCertCache.fetchedAt;
+
+  // Kalitlar 6 soatga saqlanadi; noma'lum kid kelsa (Google kalitni yangilagan bo'lishi mumkin) 1 daqiqada bir marta qayta yuklanadi
+  if ((!googleCertCache.keys.has(kid) && age > 60 * 1000) || age > 6 * 3600 * 1000) {
+    await loadGoogleCerts();
+  }
+
+  return googleCertCache.keys.get(kid);
+}
+
+// Google ID tokenini tekshiradi (imzo, muddat, aud = bizning Client ID, iss = Google)
+async function verifyGoogleIdToken(credential) {
+  const decoded = jwt.decode(credential, { complete: true });
+  const kid = decoded?.header?.kid;
+
+  if (!kid || decoded.header.alg !== "RS256") {
+    const error = new Error("Token formati noto'g'ri.");
+    error.name = "JsonWebTokenError";
+    throw error;
+  }
+
+  const key = await getGoogleKey(kid);
+
+  if (!key) {
+    const error = new Error("Token kaliti topilmadi.");
+    error.name = "JsonWebTokenError";
+    throw error;
+  }
+
+  return jwt.verify(credential, key, {
+    algorithms: ["RS256"],
+    audience: googleClientId(),
+    issuer: ["https://accounts.google.com", "accounts.google.com"],
+  });
+}
+
+function randomSuffix(length) {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let out = "";
+  for (let i = 0; i < length; i++) out += chars[crypto.randomInt(chars.length)];
+  return out;
+}
+
+function googleUsername(email) {
+  const local = String(email || "").split("@")[0].toLowerCase().replace(/[^a-z0-9_]/g, "");
+  const base = (local.length >= 3 ? local : "user").slice(0, 15);
+  return `${base}_${randomSuffix(4)}`;
+}
+
+app.post("/api/auth/google", async (req, res) => {
+  try {
+    if (!googleClientId()) {
+      return res.status(503).json({
+        message: "Google orqali kirish hali sozlanmagan.",
+      });
+    }
+
+    const credential =
+      typeof req.body?.credential === "string" ? req.body.credential : "";
+
+    if (!credential || credential.length > 5000) {
+      return res.status(400).json({ message: "Google tokeni topilmadi." });
+    }
+
+    let payload;
+
+    try {
+      payload = await verifyGoogleIdToken(credential);
+    } catch (error) {
+      const invalid = /^(JsonWebTokenError|TokenExpiredError|NotBeforeError)$/.test(
+        error.name,
+      );
+
+      console.error("Google token xatosi:", error.message);
+
+      return res.status(invalid ? 401 : 502).json({
+        message: invalid
+          ? "Google tokeni yaroqsiz yoki muddati tugagan. Qayta urinib ko'ring."
+          : "Google bilan bog'lanib bo'lmadi. Birozdan keyin urinib ko'ring.",
+      });
+    }
+
+    if (!payload.sub) {
+      return res.status(401).json({ message: "Google tokeni yaroqsiz." });
+    }
+
+    const googleId = String(payload.sub).slice(0, 64);
+    const findByGoogleId = () =>
+      pool.query("SELECT * FROM users WHERE google_id = $1", [googleId]);
+
+    let user = (await findByGoogleId()).rows[0];
+
+    if (!user) {
+      const email =
+        typeof payload.email === "string" && payload.email.length <= 255
+          ? payload.email
+          : null;
+
+      let fullName = String(payload.name || "").trim().slice(0, 150);
+      if (fullName.length < 2) fullName = (email || "").split("@")[0] || "";
+      if (fullName.length < 2) fullName = "Foydalanuvchi";
+
+      const picture =
+        typeof payload.picture === "string" &&
+        /^https:\/\//i.test(payload.picture) &&
+        payload.picture.length <= 1000
+          ? payload.picture
+          : null;
+
+      // Google hisobida parol yo'q: tasodifiy parol xeshi qo'yiladi, u bilan kirib bo'lmaydi
+      const passwordHash = await bcrypt.hash(
+        crypto.randomBytes(32).toString("hex"),
+        10,
+      );
+
+      for (let attempt = 0; attempt < 8 && !user; attempt++) {
+        try {
+          const created = await pool.query(
+            `INSERT INTO users
+               (full_name, username, password_hash, phone, email, avatar, role, google_id)
+             VALUES ($1, $2, $3, '', $4, $5, 'customer', $6)
+             RETURNING *`,
+            [fullName, googleUsername(email), passwordHash, email, picture, googleId],
+          );
+
+          user = created.rows[0];
+        } catch (error) {
+          if (error.code !== "23505") throw error;
+
+          // username band bo'lgan yoki bir vaqtda ikkinchi so'rov hisobni yaratib bo'lgan
+          user = (await findByGoogleId()).rows[0];
+        }
+      }
+
+      if (!user) throw new Error("Google hisobini yaratib bo'lmadi.");
+    }
+
+    const token = createToken(user);
+
+    res.json({
+      message: "Google orqali muvaffaqiyatli kirdingiz!",
+      token,
+      user: {
+        id: user.id,
+        full_name: user.full_name,
+        username: user.username,
+        phone: user.phone,
+        email: user.email,
+        avatar: user.avatar,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Google login error:", error.message);
+
+    res.status(500).json({
+      message: "Google orqali kirishda xatolik yuz berdi.",
+    });
+  }
+});
+
 // FOYDALANUVCHI PROFILI
 app.get("/api/auth/me", authenticate, async (req, res) => {
   try {
@@ -361,7 +562,17 @@ app.put("/api/auth/me", authenticate, async (req, res) => {
       return res.status(400).json({ message: "Telefon raqamini tekshiring." });
     }
 
-    if (avatar && (!/^https?:\/\//i.test(avatar) || avatar.length > 1000)) {
+    if (avatar.startsWith("data:")) {
+      // Fayldan yuklangan rasm (brauzer kichraytirib yuboradi)
+      if (
+        avatar.length > 400000 ||
+        !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/.test(avatar)
+      ) {
+        return res.status(400).json({
+          message: "Rasm formati noto'g'ri yoki juda katta. PNG, JPG yoki WEBP yuklang.",
+        });
+      }
+    } else if (avatar && (!/^https?:\/\//i.test(avatar) || avatar.length > 1000)) {
       return res.status(400).json({
         message: "Rasm havolasi http:// yoki https:// bilan boshlanishi kerak.",
       });
@@ -1140,6 +1351,132 @@ function orderRateLimited(ip) {
   orderHits.set(ip, hits);
   return false;
 }
+
+// Savatdagi bir nechta kitobni bir marta buyurtma qiladi (har bir kitob alohida buyurtma bo'lib adminga tushadi)
+app.post("/api/orders/cart", authenticate, async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    if (orderRateLimited(req.ip)) {
+      return res.status(429).json({
+        message: "Buyurtmalar limiti tugadi. Keyinroq urinib ko'ring.",
+      });
+    }
+
+    const name = String(req.body.name ?? "").trim();
+    const phone = String(req.body.phone ?? "").trim();
+    const note = String(req.body.note ?? "").trim();
+    const items = Array.isArray(req.body.items) ? req.body.items : [];
+
+    if (name.length < 2 || name.length > 150) {
+      return res.status(400).json({ message: "Ismni tekshiring." });
+    }
+
+    if (!isValidPhone(phone)) {
+      return res.status(400).json({ message: "Telefon raqamini tekshiring." });
+    }
+
+    if (note.length > 900) {
+      return res.status(400).json({ message: "Izoh juda uzun." });
+    }
+
+    if (items.length === 0 || items.length > 30) {
+      return res.status(400).json({ message: "Savat bo'sh yoki juda katta." });
+    }
+
+    // Bir xil kitob ikki marta kelsa, sonini qo'shamiz
+    const wanted = new Map();
+
+    for (const item of items) {
+      const bookId = String(item?.bookId ?? "").trim();
+      const quantity = Number(item?.quantity ?? 1);
+
+      if (
+        !bookId ||
+        bookId.length > 64 ||
+        !Number.isInteger(quantity) ||
+        quantity < 1 ||
+        quantity > 20
+      ) {
+        return res.status(400).json({ message: "Savat ma'lumotlari noto'g'ri." });
+      }
+
+      wanted.set(bookId, (wanted.get(bookId) || 0) + quantity);
+    }
+
+    await client.query("BEGIN");
+
+    const prepared = [];
+
+    for (const [bookId, quantity] of wanted) {
+      const book = await client.query(
+        `SELECT id, name, stock FROM books
+         WHERE id = $1 AND active = TRUE AND stock > 0`,
+        [bookId],
+      );
+
+      if (book.rowCount === 0) {
+        await client.query("ROLLBACK");
+        return res.status(404).json({
+          message:
+            "Savatdagi ba'zi kitoblar endi sotuvda yo'q. Savatni yangilab qayta urinib ko'ring.",
+          unavailable: [bookId],
+        });
+      }
+
+      if (Number(book.rows[0].stock) < quantity) {
+        await client.query("ROLLBACK");
+        return res.status(409).json({
+          message: `"${book.rows[0].name}" kitobidan faqat ${book.rows[0].stock} ta qolgan.`,
+          unavailable: [bookId],
+        });
+      }
+
+      prepared.push({ id: book.rows[0].id, quantity });
+    }
+
+    const orderIds = [];
+
+    for (const { id, quantity } of prepared) {
+      const orderNote =
+        [quantity > 1 ? `Soni: ${quantity} dona` : "", note]
+          .filter(Boolean)
+          .join(". ") || null;
+
+      const result = await client.query(
+        `INSERT INTO orders
+          (user_id, book_id, customer_name, customer_phone, note, status)
+         VALUES ($1, $2, $3, $4, $5, 'new')
+         RETURNING id`,
+        [req.user.id, id, name, phone, orderNote],
+      );
+
+      orderIds.push(result.rows[0].id);
+    }
+
+    await client.query("COMMIT");
+
+    res.status(201).json({
+      success: true,
+      message: "Buyurtmangiz qabul qilindi! Tez orada siz bilan bog'lanamiz.",
+      orderIds,
+    });
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+
+    if (error.code === "22P02") {
+      return res.status(400).json({ message: "Savatdagi kitob ID si noto'g'ri." });
+    }
+
+    console.error("Savat buyurtmasi xatosi:", error.message);
+
+    res.status(500).json({
+      message: "Buyurtma yuborishda xatolik yuz berdi.",
+    });
+  } finally {
+    client.release();
+  }
+});
 app.get("/api/admin/orders", authenticate, adminOnly, async (req, res) => {
   try {
     const [list, stats] = await Promise.all([
@@ -1409,6 +1746,12 @@ async function ensureSchema() {
     await pool.query(
       "ALTER TABLE users ADD COLUMN IF NOT EXISTS prize_delivered_at TIMESTAMPTZ",
     );
+    await pool.query(
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(64)",
+    );
+    await pool.query(
+      "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id)",
+    );
 
     await pool.query(
       "ALTER TABLE books ADD COLUMN IF NOT EXISTS description TEXT",
@@ -1439,7 +1782,9 @@ async function ensureSchema() {
         used_at    TIMESTAMPTZ,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`);
-
+    await pool.query(
+      "ALTER TABLE promo_codes ADD COLUMN IF NOT EXISTS batch VARCHAR(50)",
+    );
     await pool.query(
       "ALTER TABLE promo_codes ADD COLUMN IF NOT EXISTS piece SMALLINT NOT NULL DEFAULT 1",
     );
@@ -1462,7 +1807,6 @@ async function ensureSchema() {
         updated_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
       )`);
 
-    // Eski/boshqacha orders jadvali bo'lsa ham ishlashi uchun ustunlarni tekshiramiz
     await pool.query(
       "ALTER TABLE orders ADD COLUMN IF NOT EXISTS book_name VARCHAR(255) NOT NULL DEFAULT ''",
     );
@@ -1515,16 +1859,30 @@ async function ensureAdmin() {
     console.error("Admin tayinlash xatosi:", error.message);
   }
 }
+const PORT = Number(process.env.PORT) || 5000;
 
-const PORT = process.env.PORT || 5000;
+async function startServer() {
+  try {
+    console.log("1. DATABASE SCHEMA...");
+    await ensureSchema();
 
-(async () => {
-  await ensureSchema();
-  await ensureAdmin();
+    console.log("2. ADMIN...");
+    await ensureAdmin();
 
-  app.listen(PORT, () => {
-    console.log(
-      `MizonBooks server http://localhost:${PORT} manzilida ishlayapti`,
-    );
-  });
-})();
+    console.log("3. SERVER ISHGA TUSHMOQDA...");
+
+    const server = app.listen(PORT, "0.0.0.0", () => {
+      console.log(`MIZON BOOKS ISHLAYAPTI: ${PORT}`);
+    });
+
+    server.on("error", (error) => {
+      console.error("SERVER XATOSI:", error);
+    });
+
+  } catch (error) {
+    console.error("ISHGA TUSHIRISH XATOSI:", error);
+    process.exitCode = 1;
+  }
+}
+
+startServer();

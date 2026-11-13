@@ -331,3 +331,51 @@ body {
     font-size: 12px;
   }
 }
+
+/* Google orqali kirish */
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 26px 0 18px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.google-btn-holder {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.google-auth[hidden] {
+  display: none;
+}
+
+.back-to-shop {
+  display: inline-block;
+  margin-top: 26px;
+  color: var(--brown);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back-to-shop:hover {
+  color: var(--brown-light);
+}
+
+a.back-logo {
+  text-decoration: none;
+}
